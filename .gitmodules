@@ -1,0 +1,3 @@
+[submodule "lib/MaixSense-drivers"]
+	path = lib/MaixSense-drivers
+	url = https://github.com/PBernalPolo/MaixSense-drivers.git
