@@ -3,4 +3,11 @@
   <groupId>MaixSense-processingTester</groupId>
   <artifactId>MaixSense-processingTester</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+  	<dependency>
+  		<groupId>MaixSense-drivers</groupId>
+  		<artifactId>MaixSense-drivers</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+  </dependencies>
 </project>
