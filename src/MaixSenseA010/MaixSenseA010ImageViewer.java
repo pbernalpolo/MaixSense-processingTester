@@ -14,7 +14,7 @@ import processing.core.PImage;
 /**
  * Example on how to plot a depth image captured with the MaixSenseA010 ToF camera.
  */
-public class MaixSenseA010Viewer
+public class MaixSenseA010ImageViewer
     extends PApplet
     implements MaixSenseA010ImageConsumer
 {
@@ -42,7 +42,7 @@ public class MaixSenseA010Viewer
      */
     public static void main(String[] args)
     {
-        PApplet.main("MaixSenseA010.MaixSenseA010Viewer");
+        PApplet.main("MaixSenseA010.MaixSenseA010ImageViewer");
     }
     
     
