@@ -9,6 +9,7 @@ import jssc.SerialPortException;
 import processing.core.PApplet;
 import processing.core.PShape;
 import processing.event.MouseEvent;
+import util.calibration.MaixSenseA010DefaultCalibration;
 
 
 
@@ -26,8 +27,34 @@ public class MaixSenseA010Mesh3dViewer
     implements MaixSenseA010ImageConsumer
 {
     ////////////////////////////////////////////////////////////////
+    // PARAMETERS
+    ////////////////////////////////////////////////////////////////
+    
+    /**
+     * Quantization unit used for both the calibration and the driver.
+     */
+    static final int QUANTIZATION_UNIT = 0;
+    
+    /**
+     * Maximum depth that the sensor can measure in meters.
+     */
+    static final double DEPTH_RANGE_MAX = 2.5;
+    
+    /**
+     * Factor used to scale the pixel indices so that the mesh visualization is improved.
+     */
+    static final float XY_FACTOR = 1.0e-2f;
+    
+    
+    
+    ////////////////////////////////////////////////////////////////
     // VARIABLES
     ////////////////////////////////////////////////////////////////
+    
+    /**
+     * Calibration used to transform depth images to point clouds.
+     */
+    MaixSenseA010DefaultCalibration depthCameraCalibration;
     
     /**
      * {@link PShape} that holds the mesh generated from the last received depth image.
@@ -82,6 +109,10 @@ public class MaixSenseA010Mesh3dViewer
      */
     public void setup()
     {
+        // Create DepthCameraCalibration; we take the default one.
+        this.depthCameraCalibration = new MaixSenseA010DefaultCalibration();
+        this.depthCameraCalibration.setQuantizationUnit( QUANTIZATION_UNIT );
+        
         // Create the image queue,
         MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
         // and add the listener; in this case it is the MaixSenseA010Viewer itself.
@@ -105,12 +136,14 @@ public class MaixSenseA010Mesh3dViewer
             a010.setBinning100x100();
             a010.setFps( 20 );
             
+            a010.setQuantizationUnit( QUANTIZATION_UNIT );
+            
         } catch( SerialPortException e ) {
             e.printStackTrace();
         }
         
         // Initialize zoom variable.
-        this.zoom = 1;
+        this.zoom = ( 1 << 8 );
     }
     
     
@@ -133,8 +166,14 @@ public class MaixSenseA010Mesh3dViewer
         rotateX( (float)theta );
         double phi = ( mouseX - width/2 ) * Math.PI / width;
         rotateY( (float)phi );
+        // Set lights for illumination.
+        //pointLight( 100 , 100 , 100 , 0 , (float)( 2 * DEPTH_RANGE_MAX ) , 0 );
+        directionalLight( 30 , 0 , 0 , -1 , 0 , 0 );
+        directionalLight( 0 , 30 , 0 , 0 , -1 , 0 );
+        directionalLight( 0 , 0 , 30 , 0 , 0 , -1 );
+        ambientLight( 200 , 200 , 200 , 0 , -(float)DEPTH_RANGE_MAX , 0 );
         // Draw reference frame lines.
-        strokeWeight( 1.0e-1f );
+        strokeWeight( 1.0e-4f );
         stroke( color(255,0,0) );
         line( -100 , 0 , 0 , 100 , 0 , 0 );
         stroke( color(0,255,0) );
@@ -164,29 +203,29 @@ public class MaixSenseA010Mesh3dViewer
         for( int i=0; i<image.rows()-1; i++ ) {
             // Create lower triangles of the current strip.
             for( int j=0; j<image.cols()-1; j++ ) {
-                // Take pixel bytes and cast their unsigned representation to ints.
-                int depthA = image.pixel(i,j) & 0xff;
-                int depthB = image.pixel(i,j+1) & 0xff;
-                int depthC = image.pixel(i+1,j) & 0xff;
+                // Take pixel bytes, and convert them to depth in millimeters.
+                double depthA = this.depthCameraCalibration.depth( image.pixel(i,j) );
+                double depthB = this.depthCameraCalibration.depth(image.pixel(i,j+1) );
+                double depthC = this.depthCameraCalibration.depth(image.pixel(i+1,j) );
                 // Set triangle color.
-                newMeshShape.fill( 255 - ( depthA + depthB + depthC )/3 );
+                newMeshShape.fill( (float)( ( DEPTH_RANGE_MAX - ( depthA + depthB + depthC )/3 ) * 255/DEPTH_RANGE_MAX ) );
                 // Create triangle.
-                newMeshShape.vertex( j-imageColumnsHalf , i-imageRowsHalf , depthA );
-                newMeshShape.vertex( j+1-imageColumnsHalf , i-imageRowsHalf , depthB );
-                newMeshShape.vertex( j-imageColumnsHalf , i+1-imageRowsHalf , depthC );
+                newMeshShape.vertex( (j-imageColumnsHalf)*XY_FACTOR , (i-imageRowsHalf)*XY_FACTOR , (float)depthA );
+                newMeshShape.vertex( (j+1-imageColumnsHalf)*XY_FACTOR , (i-imageRowsHalf)*XY_FACTOR , (float)depthB );
+                newMeshShape.vertex( (j-imageColumnsHalf)*XY_FACTOR , (i+1-imageRowsHalf)*XY_FACTOR , (float)depthC );
             }
             // Create upper triangles of the current strip.
             for( int j=0; j<image.cols()-1; j++ ) {
-                // Take pixel bytes and cast their unsigned representation to ints.
-                int depthA = image.pixel(i,j+1) & 0xff;
-                int depthB = image.pixel(i+1,j) & 0xff;
-                int depthC = image.pixel(i+1,j+1) & 0xff;
+                // Take pixel bytes, and convert them to depth in millimeters.
+                double depthA = this.depthCameraCalibration.depth( image.pixel(i,j+1) );
+                double depthB = this.depthCameraCalibration.depth( image.pixel(i+1,j) );
+                double depthC = this.depthCameraCalibration.depth( image.pixel(i+1,j+1) );
                 // Set triangle color.
-                newMeshShape.fill( 255 - ( depthA + depthB + depthC )/3 );
+                newMeshShape.fill( (float)( ( DEPTH_RANGE_MAX - ( depthA + depthB + depthC )/3 ) * 255/DEPTH_RANGE_MAX ) );
                 // Create triangle.
-                newMeshShape.vertex( j+1-imageColumnsHalf , i-imageRowsHalf , depthA );
-                newMeshShape.vertex( j-imageColumnsHalf , i+1-imageRowsHalf , depthB );
-                newMeshShape.vertex( j+1-imageColumnsHalf , i+1-imageRowsHalf , depthC );
+                newMeshShape.vertex( (j+1-imageColumnsHalf)*XY_FACTOR , (i-imageRowsHalf)*XY_FACTOR , (float)depthA );
+                newMeshShape.vertex( (j-imageColumnsHalf)*XY_FACTOR , (i+1-imageRowsHalf)*XY_FACTOR , (float)depthB );
+                newMeshShape.vertex( (j+1-imageColumnsHalf)*XY_FACTOR , (i+1-imageRowsHalf)*XY_FACTOR , (float)depthC );
             }
         }
         newMeshShape.endShape();

@@ -12,7 +12,6 @@ import processing.core.PApplet;
 import processing.core.PShape;
 import processing.event.MouseEvent;
 import util.RealVector3;
-import util.calibration.DepthCameraCalibration;
 import util.calibration.MaixSenseA010DefaultCalibration;
 
 
@@ -31,13 +30,24 @@ public class MaixSenseA010PointCloudViewer
     implements MaixSenseA010ImageConsumer
 {
     ////////////////////////////////////////////////////////////////
+    // PARAMETERS
+    ////////////////////////////////////////////////////////////////
+    
+    /**
+     * Quantization unit used for both the calibration and the driver.
+     */
+    static final int QUANTIZATION_UNIT = 0;
+    
+    
+    
+    ////////////////////////////////////////////////////////////////
     // VARIABLES
     ////////////////////////////////////////////////////////////////
     
     /**
      * Calibration used to transform depth images to point clouds.
      */
-    DepthCameraCalibration depthCameraCalibration;
+    MaixSenseA010DefaultCalibration depthCameraCalibration;
     
     /**
      * {@link PShape} that holds the point cloud generated from the last received depth image.
@@ -94,6 +104,7 @@ public class MaixSenseA010PointCloudViewer
     {
         // Create DepthCameraCalibration; we take the default one.
         this.depthCameraCalibration = new MaixSenseA010DefaultCalibration();
+        this.depthCameraCalibration.setQuantizationUnit( QUANTIZATION_UNIT );
         
         // Create the image queue,
         MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
@@ -117,6 +128,8 @@ public class MaixSenseA010PointCloudViewer
             
             a010.setBinning100x100();
             a010.setFps( 20 );
+            
+            a010.setQuantizationUnit( QUANTIZATION_UNIT );
             
         } catch( SerialPortException e ) {
             e.printStackTrace();

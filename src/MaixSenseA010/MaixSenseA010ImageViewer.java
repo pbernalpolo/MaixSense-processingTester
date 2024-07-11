@@ -8,6 +8,7 @@ import a010.MaixSenseA010ImageQueue;
 import jssc.SerialPortException;
 import processing.core.PApplet;
 import processing.core.PImage;
+import util.calibration.MaixSenseA010DefaultCalibration;
 
 
 
@@ -19,8 +20,29 @@ public class MaixSenseA010ImageViewer
     implements MaixSenseA010ImageConsumer
 {
     ////////////////////////////////////////////////////////////////
+    // PARAMETERS
+    ////////////////////////////////////////////////////////////////
+    
+    /**
+     * Quantization unit used for both the calibration and the driver.
+     */
+    static final int QUANTIZATION_UNIT = 0;
+    
+    /**
+     * Maximum depth that the sensor can measure in meters.
+     */
+    static final double DEPTH_RANGE_MAX = 2.5;
+    
+    
+    
+    ////////////////////////////////////////////////////////////////
     // VARIABLES
     ////////////////////////////////////////////////////////////////
+    
+    /**
+     * Calibration used to transform depth images to point clouds.
+     */
+    MaixSenseA010DefaultCalibration depthCameraCalibration;
     
     /**
      * {@link PImage} that holds the last depth image received from the last received depth image.
@@ -70,6 +92,10 @@ public class MaixSenseA010ImageViewer
      */
     public void setup()
     {
+        // Create DepthCameraCalibration; we take the default one.
+        this.depthCameraCalibration = new MaixSenseA010DefaultCalibration();
+        this.depthCameraCalibration.setQuantizationUnit( QUANTIZATION_UNIT );
+        
         // Create the image queue,
         MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
         // and add the listener; in this case it is the MaixSenseA010Viewer itself.
@@ -91,7 +117,11 @@ public class MaixSenseA010ImageViewer
             a010.setUartDisplayOff();
             
             a010.setBinning100x100();
+            //a010.setBinning50x50();
+            //a010.setBinning25x25();
             a010.setFps( 20 );
+            
+            a010.setQuantizationUnit( QUANTIZATION_UNIT );
             
         } catch( SerialPortException e ) {
             e.printStackTrace();
@@ -121,12 +151,13 @@ public class MaixSenseA010ImageViewer
             if(  this.depthImage == null  ||  this.depthImage.width != image.cols()  ||  this.depthImage.height != image.rows()  ) {
                 this.depthImage = createImage( image.cols() , image.rows() , RGB );
             }
+            colorMode( RGB , (float)DEPTH_RANGE_MAX );
             for( int i=0; i<image.rows(); i++ ) {
                 for( int j=0; j<image.cols(); j++ ) {
-                    // Take pixel byte and cast its unsigned representation to an int.
-                    int depth = image.pixel(i,j) & 0xff;
+                    // Get depth value.
+                    double depth = this.depthCameraCalibration.depth( image.pixel( i , j ) );
                     // Set color in depth image.
-                    this.depthImage.set( j,i , color( 255-depth ) );
+                    this.depthImage.set( j,i , color( (float)depth ) );
                 }
             }
         }
