@@ -135,10 +135,8 @@ public class MaixSenseA010ImageViewer
      */
     public void draw()
     {
-        synchronized( this ) {
-            if( this.depthImage != null ) {
-                image( this.depthImage , 0 , 0 , width , height );
-            }
+        if( this.depthImage != null ) {
+            image( this.depthImage.copy() , 0 , 0 , width , height );
         }
     }
     
@@ -148,18 +146,16 @@ public class MaixSenseA010ImageViewer
      */
     public void consumeImage( MaixSenseA010Image image )
     {
-        synchronized( this ) {
-            if(  this.depthImage == null  ||  this.depthImage.width != image.cols()  ||  this.depthImage.height != image.rows()  ) {
-                this.depthImage = createImage( image.cols() , image.rows() , RGB );
-            }
-            colorMode( RGB , (float)DEPTH_RANGE_MAX );
-            for( int i=0; i<image.rows(); i++ ) {
-                for( int j=0; j<image.cols(); j++ ) {
-                    // Get depth value.
-                    double depth = this.depthCameraCalibration.depth( image.pixel( i , j ) );
-                    // Set color in depth image.
-                    this.depthImage.set( j,i , color( (float)depth ) );
-                }
+        if(  this.depthImage == null  ||  this.depthImage.width != image.cols()  ||  this.depthImage.height != image.rows()  ) {
+            this.depthImage = createImage( image.cols() , image.rows() , RGB );
+        }
+        colorMode( RGB , (float)DEPTH_RANGE_MAX );
+        for( int i=0; i<image.rows(); i++ ) {
+            for( int j=0; j<image.cols(); j++ ) {
+                // Get depth value.
+                double depth = this.depthCameraCalibration.depth( image.pixel( i , j ) );
+                // Set color in depth image.
+                this.depthImage.set( j,i , color( (float)(DEPTH_RANGE_MAX-depth) ) );
             }
         }
     }
