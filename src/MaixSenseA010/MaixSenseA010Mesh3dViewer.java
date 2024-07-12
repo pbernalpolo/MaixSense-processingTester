@@ -135,8 +135,9 @@ public class MaixSenseA010Mesh3dViewer
             
             a010.setBinning100x100();
             a010.setFps( 20 );
-            
             a010.setQuantizationUnit( QUANTIZATION_UNIT );
+            a010.setAntiMultiMachineInterferenceOff();
+            a010.setExposureTimeAutoOn();
             
         } catch( SerialPortException e ) {
             e.printStackTrace();

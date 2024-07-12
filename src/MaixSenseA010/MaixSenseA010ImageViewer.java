@@ -120,8 +120,9 @@ public class MaixSenseA010ImageViewer
             //a010.setBinning50x50();
             //a010.setBinning25x25();
             a010.setFps( 20 );
-            
             a010.setQuantizationUnit( QUANTIZATION_UNIT );
+            a010.setAntiMultiMachineInterferenceOff();
+            a010.setExposureTimeAutoOn();
             
         } catch( SerialPortException e ) {
             e.printStackTrace();
