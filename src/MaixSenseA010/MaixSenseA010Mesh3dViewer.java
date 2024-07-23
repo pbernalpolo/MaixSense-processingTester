@@ -1,11 +1,11 @@
 package MaixSenseA010;
 
 
-import a010.MaixSenseA010Driver;
-import a010.MaixSenseA010Image;
-import a010.MaixSenseA010ImageConsumer;
-import a010.MaixSenseA010ImageQueue;
 import jssc.SerialPortException;
+import maixsense.a010.MaixSenseA010Driver;
+import maixsense.a010.MaixSenseA010Image;
+import maixsense.a010.MaixSenseA010ImageConsumer;
+import maixsense.a010.MaixSenseA010ImageQueue;
 import processing.core.PApplet;
 import processing.core.PShape;
 import processing.event.MouseEvent;
