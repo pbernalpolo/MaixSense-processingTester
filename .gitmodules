@@ -1,3 +1,6 @@
 [submodule "lib/MaixSense-drivers-java"]
 	path = lib/MaixSense-drivers-java
 	url = https://github.com/PBernalPolo/MaixSense-drivers-java.git
+[submodule "lib/SensorCalibrationLibrary-java"]
+	path = lib/SensorCalibrationLibrary-java
+	url = https://github.com/PBernalPolo/SensorCalibrationLibrary-java.git
