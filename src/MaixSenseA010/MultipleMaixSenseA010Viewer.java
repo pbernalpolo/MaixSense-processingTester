@@ -3,7 +3,6 @@ package MaixSenseA010;
 
 import java.util.List;
 
-import depthCameras.maixSenseA010.MaixSenseA010DefaultCalibration;
 import jssc.SerialPortException;
 import maixsense.a010.MaixSenseA010Driver;
 import maixsense.a010.MaixSenseA010Image;
@@ -14,6 +13,7 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
 import processing.event.MouseEvent;
+import sensorCalibrationLibrary.depthCameras.maixSenseA010.MaixSenseA010DefaultCalibration;
 import util.MaixSenseA010DepthImageAdapter;
 
 
