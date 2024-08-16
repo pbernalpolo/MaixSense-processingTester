@@ -3,17 +3,18 @@ package MaixSenseA010;
 
 import java.util.List;
 
+import depthCameras.maixSenseA010.MaixSenseA010DefaultCalibration;
 import jssc.SerialPortException;
 import maixsense.a010.MaixSenseA010Driver;
 import maixsense.a010.MaixSenseA010Image;
 import maixsense.a010.MaixSenseA010ImageConsumer;
 import maixsense.a010.MaixSenseA010ImageQueue;
+import numericalLibrary.types.Vector3;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PShape;
 import processing.event.MouseEvent;
-import util.RealVector3;
-import util.calibration.MaixSenseA010DefaultCalibration;
+import util.MaixSenseA010DepthImageAdapter;
 
 
 
@@ -326,7 +327,6 @@ public class MultipleMaixSenseA010Viewer
         {
             // Create DepthCameraCalibration; we take the default one.
             this.depthCameraCalibration = new MaixSenseA010DefaultCalibration();
-            this.depthCameraCalibration.setQuantizationUnit( QUANTIZATION_UNIT );
             this.color = c;
         }
         
@@ -366,14 +366,18 @@ public class MultipleMaixSenseA010Viewer
          */
         public void consumeImage( MaixSenseA010Image image )
         {
+            // Adapt MaixSenseA010Image to be a DepthImage.
+            MaixSenseA010DepthImageAdapter adaptedImage = new MaixSenseA010DepthImageAdapter( image );
+            adaptedImage.setQuantizationUnit( QUANTIZATION_UNIT );
             // Generate point cloud from image.
-            List<RealVector3> pointCloud = this.depthCameraCalibration.imageToPointCloud( image );
+            this.depthCameraCalibration.setImageSize( adaptedImage.cols() );
+            List<Vector3> pointCloud = this.depthCameraCalibration.imageToPointCloud( adaptedImage );
             // Generate PShape from point cloud.
             PShape newPointCloudShape = createShape();
             newPointCloudShape.beginShape( POINTS );
             newPointCloudShape.strokeWeight( (float)2.0e0 );
             newPointCloudShape.stroke( this.color );
-            for( RealVector3 point : pointCloud ) {
+            for( Vector3 point : pointCloud ) {
                 newPointCloudShape.vertex( (float)point.x() , (float)point.y() , (float)point.z() );
             }
             newPointCloudShape.endShape();
@@ -387,7 +391,7 @@ public class MultipleMaixSenseA010Viewer
             for( int i=0; i<image.rows(); i++ ) {
                 for( int j=0; j<image.cols(); j++ ) {
                     // Get depth value.
-                    double depth = this.depthCameraCalibration.depth( image.pixel( i , j ) );
+                    double depth = adaptedImage.depth( i , j );
                     // Set color in depth image.
                     this.depthImage.set( j,i , color( (float)(DEPTH_RANGE_MAX-depth) ) );
                 }

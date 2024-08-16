@@ -8,7 +8,7 @@ import maixsense.a010.MaixSenseA010ImageConsumer;
 import maixsense.a010.MaixSenseA010ImageQueue;
 import processing.core.PApplet;
 import processing.core.PImage;
-import util.calibration.MaixSenseA010DefaultCalibration;
+import util.MaixSenseA010DepthImageAdapter;
 
 
 
@@ -38,11 +38,6 @@ public class MaixSenseA010ImageViewer
     ////////////////////////////////////////////////////////////////
     // VARIABLES
     ////////////////////////////////////////////////////////////////
-    
-    /**
-     * Calibration used to transform depth images to point clouds.
-     */
-    MaixSenseA010DefaultCalibration depthCameraCalibration;
     
     /**
      * {@link PImage} that holds the last depth image received from the last received depth image.
@@ -92,10 +87,6 @@ public class MaixSenseA010ImageViewer
      */
     public void setup()
     {
-        // Create DepthCameraCalibration; we take the default one.
-        this.depthCameraCalibration = new MaixSenseA010DefaultCalibration();
-        this.depthCameraCalibration.setQuantizationUnit( QUANTIZATION_UNIT );
-        
         // Create the image queue,
         MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
         // and add the listener; in this case it is the MaixSenseA010Viewer itself.
@@ -146,14 +137,18 @@ public class MaixSenseA010ImageViewer
      */
     public void consumeImage( MaixSenseA010Image image )
     {
-        if(  this.depthImage == null  ||  this.depthImage.width != image.cols()  ||  this.depthImage.height != image.rows()  ) {
-            this.depthImage = createImage( image.cols() , image.rows() , RGB );
+        // Adapt MaixSenseA010Image to be a DepthImage.
+        MaixSenseA010DepthImageAdapter adaptedImage = new MaixSenseA010DepthImageAdapter( image );
+        adaptedImage.setQuantizationUnit( QUANTIZATION_UNIT );
+        // Update PImage.
+        if(  this.depthImage == null  ||  this.depthImage.width != adaptedImage.cols()  ||  this.depthImage.height != adaptedImage.rows()  ) {
+            this.depthImage = createImage( adaptedImage.cols() , adaptedImage.rows() , RGB );
         }
         colorMode( RGB , (float)DEPTH_RANGE_MAX );
-        for( int i=0; i<image.rows(); i++ ) {
-            for( int j=0; j<image.cols(); j++ ) {
+        for( int i=0; i<adaptedImage.rows(); i++ ) {
+            for( int j=0; j<adaptedImage.cols(); j++ ) {
                 // Get depth value.
-                double depth = this.depthCameraCalibration.depth( image.pixel( i , j ) );
+                double depth = adaptedImage.depth( i , j );
                 // Set color in depth image.
                 this.depthImage.set( j,i , color( (float)(DEPTH_RANGE_MAX-depth) ) );
             }

@@ -9,7 +9,7 @@ import maixsense.a010.MaixSenseA010ImageQueue;
 import processing.core.PApplet;
 import processing.core.PShape;
 import processing.event.MouseEvent;
-import util.calibration.MaixSenseA010DefaultCalibration;
+import util.MaixSenseA010DepthImageAdapter;
 
 
 
@@ -50,11 +50,6 @@ public class MaixSenseA010Mesh3dViewer
     ////////////////////////////////////////////////////////////////
     // VARIABLES
     ////////////////////////////////////////////////////////////////
-    
-    /**
-     * Calibration used to transform depth images to point clouds.
-     */
-    MaixSenseA010DefaultCalibration depthCameraCalibration;
     
     /**
      * {@link PShape} that holds the mesh generated from the last received depth image.
@@ -109,10 +104,6 @@ public class MaixSenseA010Mesh3dViewer
      */
     public void setup()
     {
-        // Create DepthCameraCalibration; we take the default one.
-        this.depthCameraCalibration = new MaixSenseA010DefaultCalibration();
-        this.depthCameraCalibration.setQuantizationUnit( QUANTIZATION_UNIT );
-        
         // Create the image queue,
         MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
         // and add the listener; in this case it is the MaixSenseA010Viewer itself.
@@ -195,19 +186,22 @@ public class MaixSenseA010Mesh3dViewer
      */
     public void consumeImage( MaixSenseA010Image image )
     {
+        // Adapt MaixSenseA010Image to be a DepthImage.
+        MaixSenseA010DepthImageAdapter adaptedImage = new MaixSenseA010DepthImageAdapter( image );
+        adaptedImage.setQuantizationUnit( QUANTIZATION_UNIT );
         // Generate PShape from depth image.
         PShape newMeshShape = createShape();
         newMeshShape.beginShape( TRIANGLES );
         newMeshShape.stroke( 0 );
-        int imageRowsHalf = image.rows()/2;
-        int imageColumnsHalf = image.cols()/2;
-        for( int i=0; i<image.rows()-1; i++ ) {
+        int imageRowsHalf = adaptedImage.rows()/2;
+        int imageColumnsHalf = adaptedImage.cols()/2;
+        for( int i=0; i<adaptedImage.rows()-1; i++ ) {
             // Create lower triangles of the current strip.
-            for( int j=0; j<image.cols()-1; j++ ) {
+            for( int j=0; j<adaptedImage.cols()-1; j++ ) {
                 // Take pixel bytes, and convert them to depth in millimeters.
-                double depthA = this.depthCameraCalibration.depth( image.pixel(i,j) );
-                double depthB = this.depthCameraCalibration.depth(image.pixel(i,j+1) );
-                double depthC = this.depthCameraCalibration.depth(image.pixel(i+1,j) );
+                double depthA = adaptedImage.depth( i , j );
+                double depthB = adaptedImage.depth( i , j+1 );
+                double depthC = adaptedImage.depth( i+1 , j );
                 // Set triangle color.
                 newMeshShape.fill( (float)( ( DEPTH_RANGE_MAX - ( depthA + depthB + depthC )/3 ) * 255/DEPTH_RANGE_MAX ) );
                 // Create triangle.
@@ -218,9 +212,9 @@ public class MaixSenseA010Mesh3dViewer
             // Create upper triangles of the current strip.
             for( int j=0; j<image.cols()-1; j++ ) {
                 // Take pixel bytes, and convert them to depth in millimeters.
-                double depthA = this.depthCameraCalibration.depth( image.pixel(i,j+1) );
-                double depthB = this.depthCameraCalibration.depth( image.pixel(i+1,j) );
-                double depthC = this.depthCameraCalibration.depth( image.pixel(i+1,j+1) );
+                double depthA = adaptedImage.depth( i , j+1 );
+                double depthB = adaptedImage.depth( i+1 , j );
+                double depthC = adaptedImage.depth( i+1 , j+1 );
                 // Set triangle color.
                 newMeshShape.fill( (float)( ( DEPTH_RANGE_MAX - ( depthA + depthB + depthC )/3 ) * 255/DEPTH_RANGE_MAX ) );
                 // Create triangle.
