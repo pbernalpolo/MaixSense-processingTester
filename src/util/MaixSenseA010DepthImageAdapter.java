@@ -102,9 +102,9 @@ public class MaixSenseA010DepthImageAdapter
      */
     public boolean checkPixel( int i , int j )
     {
-        int pixelValueUnsignedByte = this.image.pixel( i , j ) & 0xFF ;
+        int pixelValueUnsignedByte = this.image.pixel( i , j );
         double r = Math.sqrt( ( i - 50 ) * ( i - 50 ) + ( j - 50 ) * (j - 50 ) );
-        return ( 0 < pixelValueUnsignedByte  &&  pixelValueUnsignedByte < 255  && r < 50 );
+        return ( 0 < pixelValueUnsignedByte  &&  pixelValueUnsignedByte < 255 /* && r < 50*/ );
     }
     
     
