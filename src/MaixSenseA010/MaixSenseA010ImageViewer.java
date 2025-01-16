@@ -101,8 +101,6 @@ public class MaixSenseA010ImageViewer
         try {
             a010.initialize();
             
-            a010.setImageSignalProcessorOn();
-            
             a010.setLcdDisplayOff();
             a010.setUsbDisplayOn();
             a010.setUartDisplayOff();
@@ -111,9 +109,13 @@ public class MaixSenseA010ImageViewer
             //a010.setBinning50x50();
             //a010.setBinning25x25();
             a010.setFps( 20 );
+            
             a010.setQuantizationUnit( QUANTIZATION_UNIT );
             a010.setAntiMultiMachineInterferenceOff();
+            
             a010.setExposureTimeAutoOn();
+            
+            a010.setImageSignalProcessorOn();
             
         } catch( SerialPortException e ) {
             e.printStackTrace();
