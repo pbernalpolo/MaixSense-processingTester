@@ -5,6 +5,7 @@ import jssc.SerialPortException;
 import maixsense.a010.MaixSenseA010Driver;
 import maixsense.a010.MaixSenseA010Image;
 import maixsense.a010.MaixSenseA010ImageConsumer;
+import maixsense.a010.MaixSenseA010ImageEnqueuerStrategy;
 import maixsense.a010.MaixSenseA010ImageQueue;
 import processing.core.PApplet;
 import processing.core.PShape;
@@ -106,33 +107,38 @@ public class MaixSenseA010Mesh3dViewer
     {
         // Create the image queue,
         MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
-        // and add the listener; in this case it is the MaixSenseA010Viewer itself.
+        // and add the listeners; in this case it is the MaixSenseA010ImageViewer itself.
         imageQueue.addListener( this );
         
-        // Create the driver,
-        MaixSenseA010Driver a010 = new MaixSenseA010Driver( "/dev/ttyUSB0" );
-        // and connect the queue so that received images are added to it.
-        a010.connectQueue( imageQueue );
+        // Create the MaixSense-A010 data processing strategy.
+        MaixSenseA010ImageEnqueuerStrategy imageEnqueuer = new MaixSenseA010ImageEnqueuerStrategy( imageQueue );
         
-        // Configure the MaixSense-A010 ToF camera.
+        // Create the driver,
+        MaixSenseA010Driver driver = new MaixSenseA010Driver( "/dev/ttyUSB0" );
+        
+        // initialize the driver communication,
         try {
-            a010.initialize();
-            
-            a010.setImageSignalProcessorOn();
-            
-            a010.setLcdDisplayOff();
-            a010.setUsbDisplayOn();
-            a010.setUartDisplayOff();
-            
-            a010.setBinning100x100();
-            a010.setFps( 20 );
-            a010.setQuantizationUnit( QUANTIZATION_UNIT );
-            a010.setAntiMultiMachineInterferenceOff();
-            a010.setExposureTimeAutoOn();
-            
+            driver.initialize();
         } catch( SerialPortException e ) {
             e.printStackTrace();
+            return;
         }
+        
+        // configure the MaixSense-A010 ToF camera,
+        driver.setImageSignalProcessorOn();
+        
+        driver.setLcdDisplayOff();
+        driver.setUsbDisplayOn();
+        driver.setUartDisplayOff();
+        
+        driver.setBinning100x100();
+        driver.setFps( 20 );
+        driver.setQuantizationUnit( QUANTIZATION_UNIT );
+        driver.setAntiMultiMachineInterferenceOff();
+        driver.setExposureTimeAutoOn();
+        
+        // and set the data processing strategy.
+        driver.setDataProcessingStrategy( imageEnqueuer );
         
         // Initialize zoom variable.
         this.zoom = ( 1 << 8 );

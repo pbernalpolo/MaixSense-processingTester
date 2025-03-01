@@ -7,6 +7,7 @@ import jssc.SerialPortException;
 import maixsense.a010.MaixSenseA010Driver;
 import maixsense.a010.MaixSenseA010Image;
 import maixsense.a010.MaixSenseA010ImageConsumer;
+import maixsense.a010.MaixSenseA010ImageEnqueuerStrategy;
 import maixsense.a010.MaixSenseA010ImageQueue;
 import numericalLibrary.types.Vector3;
 import processing.core.PApplet;
@@ -141,20 +142,33 @@ public class MultipleMaixSenseA010Viewer
         this.imageQueue1.addListener( this.dataHolder1 );
         this.imageQueue2.addListener( this.dataHolder2 );
         
-        // Create the driver,
+        // Create the MaixSense-A010 data processing strategies.
+        MaixSenseA010ImageEnqueuerStrategy imageEnqueuer1 = new MaixSenseA010ImageEnqueuerStrategy( imageQueue1 );
+        MaixSenseA010ImageEnqueuerStrategy imageEnqueuer2 = new MaixSenseA010ImageEnqueuerStrategy( imageQueue2 );
+        
+        // Create the drivers,
         this.tofCamera1 = new MaixSenseA010Driver( "/dev/ttyUSB0" );
         this.tofCamera2 = new MaixSenseA010Driver( "/dev/ttyUSB2" );
-        // and connect the queue so that received images are added to it.
-        this.tofCamera1.connectQueue( this.imageQueue1 );
-        this.tofCamera2.connectQueue( this.imageQueue2 );
         
-        // Configure the MaixSense-A010 ToF cameras.
+        // initialize the drivers communication,
         try {
-            this.configureCamera( this.tofCamera1 );
-            this.configureCamera( this.tofCamera2 );
+            this.tofCamera1.initialize();
         } catch( SerialPortException e ) {
             e.printStackTrace();
         }
+        try {
+            this.tofCamera2.initialize();
+        } catch( SerialPortException e ) {
+            e.printStackTrace();
+        }
+        
+        // configure the MaixSense-A010 ToF cameras,
+        configureCamera( this.tofCamera1 );
+        configureCamera( this.tofCamera2 );
+        
+        // and set the data processing strategies.
+        tofCamera1.setDataProcessingStrategy( imageEnqueuer1 );
+        tofCamera2.setDataProcessingStrategy( imageEnqueuer2 );
         
         // Initialize zoom variable.
         this.zoom = ( 1 << 8 );
@@ -168,10 +182,7 @@ public class MultipleMaixSenseA010Viewer
      * @throws SerialPortException  from {@link MaixSenseA010Driver} methods.
      */
     public void configureCamera( MaixSenseA010Driver driver )
-            throws SerialPortException
     {
-        driver.initialize();
-        
         driver.setImageSignalProcessorOn();
         
         driver.setLcdDisplayOff();
