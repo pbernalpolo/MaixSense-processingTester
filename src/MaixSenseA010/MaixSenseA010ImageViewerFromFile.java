@@ -2,12 +2,11 @@ package MaixSenseA010;
 
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import maixsense.a010.MaixSenseA010Image;
 import maixsense.a010.MaixSenseA010ImageConsumer;
 import maixsense.a010.MaixSenseA010DataLogReader;
-import maixsense.a010.MaixSenseA010ImageEnqueuerStrategy;
-import maixsense.a010.MaixSenseA010ImageQueue;
 import processing.core.PApplet;
 import processing.core.PImage;
 import util.MaixSenseA010DepthImageAdapter;
@@ -40,6 +39,9 @@ public class MaixSenseA010ImageViewerFromFile
     ////////////////////////////////////////////////////////////////
     // VARIABLES
     ////////////////////////////////////////////////////////////////
+    
+    MaixSenseA010DataLogReader source;
+    
     
     /**
      * {@link PImage} that holds the last depth image received from the last received depth image.
@@ -89,22 +91,8 @@ public class MaixSenseA010ImageViewerFromFile
      */
     public void setup()
     {
-        // Create the image queue,
-        MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
-        // and add the listener; in this case it is the MaixSenseA010PointCloudViewer itself.
-        imageQueue.addListener( this );
-        
-        // Create the MaixSense-A010 data processing strategy.
-        MaixSenseA010ImageEnqueuerStrategy imageEnqueuer = new MaixSenseA010ImageEnqueuerStrategy( imageQueue );
-        
         // Create the source of images,
-        MaixSenseA010DataLogReader source = new MaixSenseA010DataLogReader( "maixSenseA010_20250228_183205.log" );
-        // and set the data processing strategy.
-        source.setDataProcessingStrategy( imageEnqueuer );
-        
-        // Set the reading speed.
-        source.setReadingSpeedFps( 13 );
-        //source.setReadingSpeedMaximum();
+        source = new MaixSenseA010DataLogReader( "maixSenseA010_25x25_20250614_135010.log" );
         
         // Initialize the source.
         try {
@@ -121,6 +109,25 @@ public class MaixSenseA010ImageViewerFromFile
      */
     public void draw()
     {
+    	try {
+    		// Get next image.
+			MaixSenseA010Image image = source.nextImage();
+			// Handle the end of the log.
+			if( image == null ) {
+				System.out.println( "Reached end of log." );
+				exit();
+				return;
+			}
+			// Consume the image.
+			consumeImage( image );
+			// Adapt to a frequency of 20Hz.
+			Thread.sleep( (long) (1.0/20.0 * 1.0e3) );
+		} catch( IOException e ) {
+			e.printStackTrace();
+		} catch( InterruptedException e ) {
+			e.printStackTrace();
+		}
+    	// Plot the image.
         if( this.depthImage != null ) {
             image( this.depthImage.copy() , 0 , 0 , width , height );
         }
@@ -129,6 +136,8 @@ public class MaixSenseA010ImageViewerFromFile
     
     /**
      * {@inheritDoc}
+     * <p>
+     * In particular, here we get the {@link MaixSenseA010Image} and copy the information into a {@link PImage}.
      */
     public void consumeImage( MaixSenseA010Image image )
     {

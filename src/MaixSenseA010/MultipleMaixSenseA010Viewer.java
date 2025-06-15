@@ -8,7 +8,7 @@ import maixsense.a010.MaixSenseA010Driver;
 import maixsense.a010.MaixSenseA010Image;
 import maixsense.a010.MaixSenseA010ImageConsumer;
 import maixsense.a010.MaixSenseA010ImageEnqueuerStrategy;
-import maixsense.a010.MaixSenseA010ImageQueue;
+import maixsense.a010.MaixSenseA010ImagePublisherQueue;
 import numericalLibrary.types.Vector3;
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -66,12 +66,12 @@ public class MultipleMaixSenseA010Viewer
     /**
      * Queue that stores the images received by the first MaixSense-A010.
      */
-    MaixSenseA010ImageQueue imageQueue1;
+    MaixSenseA010ImagePublisherQueue imageQueue1;
     
     /**
      * Queue that stores the images received by the second MaixSense-A010.
      */
-    MaixSenseA010ImageQueue imageQueue2;
+    MaixSenseA010ImagePublisherQueue imageQueue2;
     
     /**
      * Consumes images from {@link #imageQueue1} and transforms them to a {@link PImage} and a point cloud.
@@ -136,8 +136,8 @@ public class MultipleMaixSenseA010Viewer
         this.dataHolder2 = new DepthImageDataHolder( color(0,0,255) );
         
         // Create the image queues,
-        this.imageQueue1 = new MaixSenseA010ImageQueue();
-        this.imageQueue2 = new MaixSenseA010ImageQueue();
+        this.imageQueue1 = new MaixSenseA010ImagePublisherQueue();
+        this.imageQueue2 = new MaixSenseA010ImagePublisherQueue();
         // and add the listeners.
         this.imageQueue1.addListener( this.dataHolder1 );
         this.imageQueue2.addListener( this.dataHolder2 );
@@ -274,7 +274,7 @@ public class MultipleMaixSenseA010Viewer
     
     
     /**
-     * Overrides {@link PApplet#exit()} so that {@link MaixSenseA010Driver} is terminated and {@link MaixSenseA010ImageQueue} is stopped.
+     * Overrides {@link PApplet#exit()} so that {@link MaixSenseA010Driver} is terminated and {@link MaixSenseA010ImagePublisherQueue} is stopped.
      */
     public void exit()
     {

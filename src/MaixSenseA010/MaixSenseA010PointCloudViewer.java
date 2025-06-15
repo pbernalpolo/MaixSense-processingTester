@@ -8,7 +8,7 @@ import maixsense.a010.MaixSenseA010Driver;
 import maixsense.a010.MaixSenseA010Image;
 import maixsense.a010.MaixSenseA010ImageConsumer;
 import maixsense.a010.MaixSenseA010ImageEnqueuerStrategy;
-import maixsense.a010.MaixSenseA010ImageQueue;
+import maixsense.a010.MaixSenseA010ImagePublisherQueue;
 import numericalLibrary.types.Vector3;
 import processing.core.PApplet;
 import processing.core.PShape;
@@ -108,7 +108,7 @@ public class MaixSenseA010PointCloudViewer
         this.depthCameraCalibration = new MaixSenseA010DefaultCalibration();
         
         // Create the image queue,
-        MaixSenseA010ImageQueue imageQueue = new MaixSenseA010ImageQueue();
+        MaixSenseA010ImagePublisherQueue imageQueue = new MaixSenseA010ImagePublisherQueue();
         // and add the listener; in this case it is the MaixSenseA010PointCloudViewer itself.
         imageQueue.addListener( this );
         
